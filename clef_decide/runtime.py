@@ -46,6 +46,10 @@ def gpu_providers() -> List[str]:
     return [p for p in GPU_PROVIDERS if p in available] + [CPU]
 
 
+def _uses_cuda(providers: Optional[Sequence[str]]) -> bool:
+    return bool(providers) and any("CUDA" in str(p) for p in providers)
+
+
 def _create_session(path, options: ort.SessionOptions, providers: Optional[Sequence[str]] = None,
                     require_gpu: bool = False, **kwargs) -> ort.InferenceSession:
     """``providers`` None = CPU only. If a GPU provider was asked for but the session cannot use it (out of memory, missing
@@ -113,6 +117,11 @@ class Decider:
         if keep_bf16:
             options.enable_cpu_mem_arena = False
             kwargs["disabled_optimizers"] = ["ConstantFolding"]
+        if _uses_cuda(providers):
+            # onnxruntime 1.31 + CUDA: with graph optimization on, the nodes left on the CPU get a Memcpy node whose copy back fails
+            # (`MemcpyToHost ... CUDA failure 1: invalid argument`, every request). Switching the optimizers off fixes it, and the CUDA
+            # output then matches the CPU output exactly (A100 40 GB, onnxruntime-gpu 1.31.0; see README "GPUで動かす"). CPU is untouched.
+            options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
         self.session = _create_session(graph, options, providers, require_gpu, **kwargs)
         self.vision = None
         if load_vision:

@@ -109,3 +109,14 @@ def test_decider_resolves_device_before_opening_a_session(monkeypatch, tmp_path)
     (tmp_path / "model-fp32.onnx").write_bytes(b"")
     with pytest.raises(dev.GpuUnavailableError):
         runtime.Decider(tmp_path, device="cuda", require_gpu=True)
+
+
+def test_cuda_detection_for_the_graph_optimization_switch():
+    """The main graph runs with graph optimization off when a CUDA provider is requested (onnxruntime MemcpyToHost bug)."""
+    from clef_decide import runtime
+
+    assert runtime._uses_cuda(["CUDAExecutionProvider", "CPUExecutionProvider"])
+    assert runtime._uses_cuda(WITH_CUDA)
+    assert not runtime._uses_cuda(["CPUExecutionProvider"])
+    assert not runtime._uses_cuda(None)
+    assert not runtime._uses_cuda([])

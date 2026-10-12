@@ -160,6 +160,7 @@ uv run --no-sync demo_inference_text.py --device cuda --require-gpu
 - CPU 版に戻すには `uv pip uninstall onnxruntime-gpu` のあと `uv sync --reinstall-package onnxruntime`
 - **このモデルは大きく（重みは約 20 GB）、一般的な GPU には載りません。** 実測（RTX 3050 Ti Laptop 4 GB、CUDA 13.4、cuDNN 9.20、onnxruntime-gpu 1.31）では、CUDA でのロードが 62.7 秒後に out of memory（`CUDA failure 2`）で失敗し、警告を出して CPU で動きました（`--require-gpu` ならこの時点でエラーです）。PATH の問題ではなく、CUDA の DLL は読めていてメモリ確保で失敗しています
 - VRAM の目安：4 GB では載りません。何 GB あれば載るか、載った場合に CPU より速いかは**未検証**です（このモデルでは GPU の速度測定ができていません）
+- **A100 40 GB（Colab、onnxruntime-gpu 1.31.0、CUDA 13）では、ロードはできるが、グラフの最適化が有効だと全リクエストが失敗しました**（`MemcpyToHost ... CUDA failure 1: invalid argument`。メモリ不足ではありません）。CPU に残るノードのために onnxruntime が入れる Memcpy ノードのコピーが失敗します。グラフの最適化を無効（`ORT_DISABLE_ALL`）にすると動き、1 問の出力は CPU と完全に一致しました（最大差 0、選択も同じ）。メモリの上限・arena・cuDNN・TF32・コピー用ストリームなどの設定では直りません。そこで、CUDA を指定したときはメイン部のグラフだけ最適化を無効にしています（CPU は変更なし）。他の GPU・他の onnxruntime での動作は未検証です
 - 参考：同じ測定で、小さい別のモデルでは GPU で大きく速くなったものがあります（OneJev 0.8B で約 14 倍、JEVision で約 10 倍など）が、モデルによって効果は大きく異なり（効果なしや遅くなるものもあります）、この 9B には当てはまりません
 - GPU での確率は、CPU と完全には一致しません（演算の順序の違い）
 
