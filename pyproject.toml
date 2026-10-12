@@ -1,0 +1,63 @@
+[project]
+name = "clef-flash-onnx-cpu"
+version = "0.1.0"
+description = "Cloudflare clef-flash (9B, typed decisions, text and images) with onnxruntime + numpy only: no torch, no transformers. CPU, and GPU when onnxruntime-gpu is installed"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+# Runtime. That is the whole list. pillow is only imported when a request carries images.
+dependencies = [
+    "onnxruntime>=1.20",
+    "numpy>=1.26",
+    "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+# GPU (CUDA 13 + cuDNN 9 on PATH). onnxruntime-gpu and onnxruntime write into the same onnxruntime/ folder and must not be
+# installed together: after `uv sync --extra gpu` run
+#   uv pip uninstall onnxruntime
+#   uv pip install --force-reinstall --no-deps onnxruntime-gpu
+# and use `uv run --no-sync` afterwards (a plain `uv run` puts the CPU build back). See the README.
+gpu = [
+    "onnxruntime-gpu>=1.20",
+]
+
+[dependency-groups]
+# Only for the oracle gate in verify/check_tokenizer_fuzz.py. Never imported at runtime.
+verify = [
+    "tokenizers>=0.20",
+]
+# Only for tests/. The tests need no model.
+test = [
+    "pytest>=8",
+]
+# Only for demo_inference_webcam.py (camera capture and the live window). Never imported by clef_decide.
+webcam = [
+    "opencv-python>=4.8",
+]
+# Only for export/ and the oracle gates in verify/ that need the reference model (Cloudflare's joint_schema_model.py needs
+# exactly these). Never imported at runtime. torch/torchvision: the CPU wheels are enough (--index-url https://download.pytorch.org/whl/cpu).
+export = [
+    "onnx>=1.16",
+    "onnxscript>=0.5",
+    "torch>=2.11",
+    "torchvision>=0.26",
+    "transformers>=5.10.2,<5.18",
+    "safetensors>=0.4",
+    "accelerate>=1.0",
+    "huggingface-hub>=0.30",
+    "tokenizers>=0.20",
+]
+
+# `uv sync` installs the code in this checkout (clef_decide) so that
+#   uv pip install git+https://github.com/Kazuhito00/Clef-Flash-ONNX-CPU
+# gives `import clef_decide` too (the bench adapter uses it). The demos also run straight from the checkout.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["clef_decide"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

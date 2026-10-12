@@ -1,0 +1,4 @@
+# Runtime. That is the whole list (text needs only the first two; pillow is for image input).
+onnxruntime>=1.20
+numpy>=1.26
+pillow>=10.0       # image input (not imported by the text path)

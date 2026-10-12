@@ -1,0 +1,13 @@
+# Only for export/prepare_model.py (step 3: rewrite the graph's weight references),
+# export/make_golden.py and the oracle gates in verify/. Never imported at runtime.
+onnx>=1.16
+onnxscript>=0.5      # torch.onnx.export(dynamo=True), for export/export_vision.py
+# the reference implementation (Cloudflare's joint_schema_model.py) needs exactly these:
+torch>=2.11          # --index-url https://download.pytorch.org/whl/cpu
+transformers>=5.10.2
+safetensors>=0.4
+accelerate>=1.0
+huggingface-hub>=0.30
+tokenizers>=0.20     # the oracle for verify/check_tokenizer_fuzz.py
+torchvision>=0.26   # the video processor of the checkpoint imports it (even for text-only runs)
+pillow>=10.0         # the processor imports it

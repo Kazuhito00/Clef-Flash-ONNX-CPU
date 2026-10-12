@@ -1,0 +1,38 @@
+# Downloaded / generated model files and anything big: never committed.
+models/
+*.onnx
+*.onnx.data
+*.onnx_data
+*.onnx_data_*
+*.safetensors
+*.part
+*.part[0-9][0-9][0-9]
+onnxruntime_profile_*.json
+dist/
+# Golden data IS committed (it is the oracle); logs are not.
+*.log
+*.pt
+
+# Environments, caches
+.venv/
+.venv*/
+venv/
+__pycache__/
+*.py[codz]
+*.egg-info/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+.coverage
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local secrets
+.env
+.env.*
